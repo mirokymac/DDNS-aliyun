@@ -53,14 +53,14 @@ def getDomainList(RRKey='', TypeKey='A', ValueKey=''):
         getjson = urlopen(rurl).read().decode('utf-8')
         print getjson
     except Exception as e:
-        print('[' + e + ']Fail to get resolve list. Due to request failed.')
+        print('[' + str(e) + ']Fail to get resolve list. Due to request failed.')
         return False
 
     domainlist = dict()
     json = loadjson(getjson)
     try:
         for record in json['DomainRecords']['Record']:
-            domainlist[record['RR']] = record['RecordId']
+            domainlist[record['RR']] = [record['RecordId'], record['Value']]
     except Exception as e:
         print('Empty List.')
         return False
@@ -95,7 +95,7 @@ def updateDomainRecord(recordID, ip, RR, Typekey='A'):
         getjson = urlopen(rurl).read().decode('utf-8')
         print getjson
     except Exception as e:
-        print('[' + e + ']Fail to update Record. Due to request failed.')
+        print('[' + str(e) + ']Fail to update Record. Due to request failed.')
         return False
 
     json = loadjson(getjson)
@@ -131,14 +131,17 @@ def getip():
 
 if __name__ == '__main__':
     while True:
-        if DomainName.split('.').count() < 3:
+        if len(DomainName.split('.')) < 3:
             RR = '@'
         else:
             RR = DomainName.split('.')[0]
 
         if RequestId == '':
-            RequestId = getDomainList()[RR]
-            print(RequestId)
+            temp = getDomainList()[RR]
+            RequestId = temp[0]
+            CurrentIP = temp[1]
+            print(RequestId, CurrentIP)
+            del temp
 
         try:
             ip = getip()
