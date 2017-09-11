@@ -16,31 +16,17 @@ from json import loads as loadjson
 
 # local run tracing
 import logging
+from logging import handlers
 from sys import argv, exit
 from getopt import getopt, GetoptError
 
-# logging defination
-class StreamToLogger(object):
-   """
-   Fake file-like stream object that redirects writes to a logger instance.
-   """
-   def __init__(self, logger, log_level=logging.INFO):
-      self.logger = logger
-      self.log_level = log_level
-      self.linebuf = ''
-   def write(self, buf):
-      for line in buf.rstrip().splitlines():
-         self.logger.log(self.log_level, line.rstrip())
-
-
-    
 
 HELP = "ddns-aliyun is a simple script to update your locale IP to \
 aliyun DNS server.\npython ddns-aliyun.py [-c {configure path}]\n\
   -h\t\t\t Print out the help script.\n\
   -c\t\t\t set up the configure file, defualt:\"./token.json\"\n"
   
-shortopts = 'h:c'
+shortopts = 'hc:'
 longopts = ['help', 'config']
 
 url = 'http://alidns.aliyuncs.com'
@@ -250,20 +236,21 @@ def parse_json_in_str(data):
 
 
 if __name__ == '__main__':
-
-    Rthandler = logging.handlers.RotatingFileHandler(
+    
+    logging.basicConfig(level=logging.WARNING,
+            format='%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
+            datefmt='%d %b %Y %H:%M:%S')
+    Rthandler = handlers.RotatingFileHandler(
             'ddns.log',
             maxBytes=10*1024*1024,
             backupCount=5
             )
     Rthandler.setLevel(logging.INFO)
     Rthandler.setFormatter(
-            logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
-    logging.basicConfig(
-            level=logging.INFO,
-            format = '%(asctime)s:%(levelname)s:%(message)s')
+            logging.Formatter(
+                    '%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
+                    datefmt='%d %b %Y %H:%M:%S'))
     logging.getLogger('').addHandler(Rthandler)
-    
     
     try:
         optlist, argvs = getopt(argv[1: ], shortopts, longopts)
@@ -295,8 +282,12 @@ if __name__ == '__main__':
     except GetoptError as e:
         logging.error(e)
         exit(0)
+
+#    print logging._handlerList
+#    print config
         
     if Secret and DomainName and SleepTime:
+#        print "on start"
         while True:
             if len(DomainName.split('.')) < 3:
                 RR = '@'
@@ -308,6 +299,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     logging.error('Fail to check domain, retrying...')
                     time.sleep(2* SleepTime)
+ #                   print "rooting"
                     continue
                 logging.info('Domain Check Done.')
                 RequestId = temp[0]
