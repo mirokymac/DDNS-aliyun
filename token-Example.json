@@ -1,0 +1,7 @@
+{
+	"ID" : "",//填写ID
+	"Secret" : "",//填写秘钥
+	"RequestId" : "",
+	"DomainName" : "",//填写域名
+	"SleepTime" : 30//刷新间隔
+}

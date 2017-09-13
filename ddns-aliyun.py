@@ -239,7 +239,7 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=logging.WARNING,
             format='%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
-            datefmt='%d %b %Y %H:%M:%S')
+            datefmt='%y-%m-%d %H:%M:%S')
     Rthandler = handlers.RotatingFileHandler(
             'ddns.log',
             maxBytes=10*1024*1024,
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     Rthandler.setFormatter(
             logging.Formatter(
                     '%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='%d %b %Y %H:%M:%S'))
+                    datefmt='%y-%m-%d %H:%M:%S'))
     logging.getLogger('').addHandler(Rthandler)
     
     try:
