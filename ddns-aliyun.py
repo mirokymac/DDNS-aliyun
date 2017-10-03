@@ -26,8 +26,8 @@ aliyun DNS server.\npython ddns-aliyun.py [-c {configure path}]\n\
   -h\t\t\t Print out the help script.\n\
   -c\t\t\t set up the configure file, defualt:\"./token.json\"\n"
   
-shortopts = 'hc:'
-longopts = ['help', 'config']
+shortopts = 'hsc:'
+longopts = ['help', 'swift', 'config']
 
 url = 'http://alidns.aliyuncs.com'
 ID = '' # AccessID 填入
@@ -237,9 +237,9 @@ def parse_json_in_str(data):
 
 if __name__ == '__main__':
     
-    logging.basicConfig(level=logging.WARNING,
+    logging.basicConfig(level=logging.DEBUG,
             format='%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
-            datefmt='%y-%m-%d %H:%M:%S')
+            datefmt='%d %b %Y %H:%M:%S')
     Rthandler = handlers.RotatingFileHandler(
             'ddns.log',
             maxBytes=10*1024*1024,
@@ -247,10 +247,16 @@ if __name__ == '__main__':
             )
     Rthandler.setLevel(logging.INFO)
     Rthandler.setFormatter(
-            logging.Formatter(
-                    '%(asctime)s [line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='%y-%m-%d %H:%M:%S'))
+            logging.Formatter('%(asctime)s:%(levelname)s:%(message)s',
+                              datefmt='%d %b %Y %H:%M:%S'))
+    STDhandler = logging.StreamHandler()
+    STDhandler.setLevel(logging.DEBUG)
+    STDhandler.setFormatter(
+            logging.Formatter('%(asctime)s:%(levelname)s:%(message)s',
+                              datefmt='%d %b %Y %H:%M:%S'))
+
     logging.getLogger('').addHandler(Rthandler)
+#    logging.getLogger('').addHandler(STDhandler)
     
     try:
         optlist, argvs = getopt(argv[1: ], shortopts, longopts)
@@ -270,6 +276,10 @@ if __name__ == '__main__':
                     with open(value) as jf:
                         config = parse_json_in_str(
                                 remove_comment(jf.read().decode("utf-8")))
+            if key in ("-s", "--swift"):
+                retry = 1
+            else:
+                retry = 6
 
         del path
         params.update(dict(AccessKeyId = config["ID"]))
@@ -288,7 +298,8 @@ if __name__ == '__main__':
         
     if Secret and DomainName and SleepTime:
 #        print "on start"
-        while True:
+        count = 0
+        while count <= retry:
             if len(DomainName.split('.')) < 3:
                 RR = '@'
             else:
@@ -310,10 +321,12 @@ if __name__ == '__main__':
     
             try:
                 ip = getip()
-                logging.info("CurrentIP: %s" % ip)
                 if CurrentIP != ip:
+                    logging.warning("CurrentIP: %s" % ip)
                     if updateDomainRecord(RequestId, ip, RR):
                         CurrentIP = ip
+                else:
+                    count += 1
             except Exception as e:
                 logging.warning(str(e))
                 logging.warning("Update Unsucessful")
