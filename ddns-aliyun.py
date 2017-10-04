@@ -266,7 +266,7 @@ if __name__ == '__main__':
                 config = parse_json_in_str(
                         remove_comment(jf.read().decode("utf-8")))
                 
-                
+        retry = 6
         for key, value in optlist:
             if key in ("-h", "--help"):
                 print HELP
@@ -278,8 +278,6 @@ if __name__ == '__main__':
                                 remove_comment(jf.read().decode("utf-8")))
             if key in ("-s", "--swift"):
                 retry = 1
-            else:
-                retry = 6
 
         del path
         params.update(dict(AccessKeyId = config["ID"]))
@@ -331,7 +329,8 @@ if __name__ == '__main__':
                 logging.warning(str(e))
                 logging.warning("Update Unsucessful")
                 pass
-            time.sleep(SleepTime)
+            if count < retry:
+                time.sleep(SleepTime)
     else:
         logging.error('No Token! Check you token config')
         exit(0)
